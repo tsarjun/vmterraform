@@ -45,7 +45,7 @@ type = string
 default = "Azure clint ID"
 type = string 
 }
- variable "client_secrate" {
+ variable "client_secret" {
 description ="Azure client secret"
 type = string
 }
