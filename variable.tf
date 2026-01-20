@@ -49,3 +49,20 @@ type = string
 description ="Azure client secret"
 type = string
 }
+variable "client_id" {
+  description = "Azure client ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "tenant_id" {
+  description = "Azure tenant ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "subscription_id" {
+  description = "Azure subscription ID"
+  type        = string
+  sensitive   = true
+}
