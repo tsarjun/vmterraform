@@ -7,6 +7,8 @@ terraform {
   }
 
   required_version = ">= 1.3.0"
+}
+
 provider "azurerm" {
   features {}
 
@@ -14,5 +16,4 @@ provider "azurerm" {
   client_id       = var.client_id
   client_secret   = var.client_secret
   tenant_id       = var.tenant_id
-}
 }
