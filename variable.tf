@@ -1,52 +1,49 @@
 variable "location" {
-default = "central India"
-type = string
+  type    = string
+  default = "central India"
 }
 
 variable "rg_name" {
-default = "Arjunrg"
-type = string
+  type    = string
+  default = "Arjunrg"
 }
 
 variable "address_space" {
-default = ["10.0.1.0/16"]
-type = list(string)
-}
- variable "vnet"{
-default = "arvnet"
-type = string 
+  type    = list(string)
+  default = ["10.0.1.0/16"]
 }
 
-variable "address_prefixes"{
-default = ["10.0.1.0/24"]
-type = list(string)
+variable "vnet" {
+  type    = string
+  default = "arvnet"
 }
- 
+
+variable "address_prefixes" {
+  type    = list(string)
+  default = ["10.0.1.0/24"]
+}
+
 variable "subnet_name" {
-default = "subnet_arjun"
-type = string 
+  type    = string
+  default = "subnet_arjun"
 }
 
 variable "nsgname" {
-default = "arjunnsg"
-type = string  
+  type    = string
+  default = "arjunnsg"
 }
 
 variable "nickname" {
-default = "arjunnic"
-type = string 
+  type    = string
+  default = "arjunnic"
 }
 
 variable "vmname" {
-default = "arjunlinux1"
-type = string 
+  type    = string
+  default = "arjunlinux1"
 }
- variable "clint_id"{
-default = "Azure clint ID"
-type = string 
-}
- variable "ssh_public_key" {
+
+variable "ssh_public_key" {
   description = "SSH public key for Azure VM"
   type        = string
 }
-
