@@ -109,4 +109,9 @@ resource "azurerm_linux_virtual_machine" "vm" {
   depends_on = [
     azurerm_network_interface_security_group_association.nsg_nic
   ]
+lifecycle {
+    ignore_changes = [
+      size
+    ]
+  }
 }
