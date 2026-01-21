@@ -1,18 +1,24 @@
+############################################
 # Resource Group
+############################################
 resource "azurerm_resource_group" "rg" {
   name     = var.rg_name
   location = var.location
 }
 
+############################################
 # Virtual Network
+############################################
 resource "azurerm_virtual_network" "vnet" {
   name                = var.vnet
+  address_space       = var.address_space
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  address_space       = var.address_space
 }
 
+############################################
 # Subnet
+############################################
 resource "azurerm_subnet" "subnet" {
   name                 = var.subnet_name
   resource_group_name  = azurerm_resource_group.rg.name
@@ -20,14 +26,35 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = var.address_prefixes
 }
 
+############################################
 # Network Security Group
+############################################
 resource "azurerm_network_security_group" "nsg" {
   name                = var.nsgname
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 }
 
+############################################
+# NSG Rule – Allow SSH
+############################################
+resource "azurerm_network_security_rule" "allow_ssh" {
+  name                        = "Allow-SSH"
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "22"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.rg.name
+  network_security_group_name = azurerm_network_security_group.nsg.name
+}
+
+############################################
 # Network Interface
+############################################
 resource "azurerm_network_interface" "nic" {
   name                = var.nickname
   location            = azurerm_resource_group.rg.location
@@ -40,13 +67,17 @@ resource "azurerm_network_interface" "nic" {
   }
 }
 
+############################################
 # Associate NSG with NIC
+############################################
 resource "azurerm_network_interface_security_group_association" "nsg_nic" {
   network_interface_id      = azurerm_network_interface.nic.id
   network_security_group_id = azurerm_network_security_group.nsg.id
 }
 
+############################################
 # Linux Virtual Machine
+############################################
 resource "azurerm_linux_virtual_machine" "vm" {
   name                = var.vmname
   resource_group_name = azurerm_resource_group.rg.name
@@ -60,10 +91,11 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   admin_ssh_key {
     username   = "adminuser"
-    public_key = file("~/.ssh/id_rsa.pub")
+    public_key = var.ssh_public_key
   }
 
   os_disk {
+    name                 = "${var.vmname}-osdisk"
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
@@ -74,5 +106,6 @@ resource "azurerm_linux_virtual_machine" "vm" {
     sku       = "22_04-lts"
     version   = "latest"
   }
-}
 
+  disable_password_authentication = true
+}
