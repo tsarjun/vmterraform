@@ -1,45 +1,37 @@
-############################################
 # Resource Group
-############################################
 resource "azurerm_resource_group" "rg" {
-  name     = var.rg_name
-  location = var.location
+  name     = "Arjunrg"
+  location = "southindia"
 }
 
-############################################
 # Virtual Network
-############################################
 resource "azurerm_virtual_network" "vnet" {
-  name                = var.vnet
-  address_space       = var.address_space
+  name                = "arvnet"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
+  address_space       = ["10.0.1.0/24"]
 }
 
-############################################
 # Subnet
-############################################
 resource "azurerm_subnet" "subnet" {
-  name                 = var.subnet_name
+  name                 = "subnet_arjun"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = var.address_prefixes
+  address_prefixes     = ["10.0.1.0/24"]
 }
 
-############################################
-# Network Security Group
-############################################
+# NSG
 resource "azurerm_network_security_group" "nsg" {
-  name                = var.nsgname
+  name                = "arjunnsg"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 }
 
-############################################
-# NSG Rule – Allow SSH
-############################################
+# NSG rule
 resource "azurerm_network_security_rule" "allow_ssh" {
   name                        = "Allow-SSH"
+  resource_group_name         = azurerm_resource_group.rg.name
+  network_security_group_name = azurerm_network_security_group.nsg.name
   priority                    = 100
   direction                   = "Inbound"
   access                      = "Allow"
@@ -48,15 +40,11 @@ resource "azurerm_network_security_rule" "allow_ssh" {
   destination_port_range      = "22"
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.rg.name
-  network_security_group_name = azurerm_network_security_group.nsg.name
 }
 
-############################################
-# Network Interface
-############################################
+# NIC
 resource "azurerm_network_interface" "nic" {
-  name                = var.nickname
+  name                = "arjunnic"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
@@ -67,35 +55,32 @@ resource "azurerm_network_interface" "nic" {
   }
 }
 
-############################################
-# Associate NSG with NIC
-############################################
+# Attach NSG to NIC
 resource "azurerm_network_interface_security_group_association" "nsg_nic" {
   network_interface_id      = azurerm_network_interface.nic.id
   network_security_group_id = azurerm_network_security_group.nsg.id
+
+  depends_on = [
+    azurerm_network_interface.nic
+  ]
 }
 
-############################################
-# Linux Virtual Machine
-############################################
+# Linux VM
 resource "azurerm_linux_virtual_machine" "vm" {
-  name                = var.vmname
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  size                = "Standard_B2s"
-  admin_username      = "adminuser"
-
-  network_interface_ids = [
-    azurerm_network_interface.nic.id
-  ]
+  name                  = "arjunlinux1"
+  resource_group_name   = azurerm_resource_group.rg.name
+  location              = azurerm_resource_group.rg.location
+  size                  = "Standard_B1ms"   # Changed to available size
+  network_interface_ids = [azurerm_network_interface.nic.id]
+  admin_username        = "adminuser"
+  disable_password_authentication = true
 
   admin_ssh_key {
     username   = "adminuser"
-    public_key = var.ssh_public_key
+    public_key = file("~/.ssh/id_rsa.pub")
   }
 
   os_disk {
-    name                 = "${var.vmname}-osdisk"
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
@@ -107,5 +92,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
     version   = "latest"
   }
 
-  disable_password_authentication = true
+  depends_on = [
+    azurerm_network_interface_security_group_association.nsg_nic
+  ]
 }
