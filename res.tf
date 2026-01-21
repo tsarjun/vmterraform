@@ -1,18 +1,24 @@
+# ------------------------
 # Resource Group
+# ------------------------
 resource "azurerm_resource_group" "rg" {
   name     = "Arjunrg"
   location = "southindia"
 }
 
+# ------------------------
 # Virtual Network
+# ------------------------
 resource "azurerm_virtual_network" "vnet" {
   name                = "arvnet"
-  location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
   address_space       = ["10.0.1.0/24"]
 }
 
+# ------------------------
 # Subnet
+# ------------------------
 resource "azurerm_subnet" "subnet" {
   name                 = "subnet_arjun"
   resource_group_name  = azurerm_resource_group.rg.name
@@ -20,14 +26,16 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = ["10.0.1.0/24"]
 }
 
-# NSG
+# ------------------------
+# Network Security Group
+# ------------------------
 resource "azurerm_network_security_group" "nsg" {
   name                = "arjunnsg"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 }
 
-# NSG rule
+# Allow SSH
 resource "azurerm_network_security_rule" "allow_ssh" {
   name                        = "Allow-SSH"
   resource_group_name         = azurerm_resource_group.rg.name
@@ -42,7 +50,9 @@ resource "azurerm_network_security_rule" "allow_ssh" {
   destination_address_prefix  = "*"
 }
 
-# NIC
+# ------------------------
+# Network Interface
+# ------------------------
 resource "azurerm_network_interface" "nic" {
   name                = "arjunnic"
   location            = azurerm_resource_group.rg.location
@@ -55,7 +65,9 @@ resource "azurerm_network_interface" "nic" {
   }
 }
 
+# ------------------------
 # Attach NSG to NIC
+# ------------------------
 resource "azurerm_network_interface_security_group_association" "nsg_nic" {
   network_interface_id      = azurerm_network_interface.nic.id
   network_security_group_id = azurerm_network_security_group.nsg.id
@@ -65,19 +77,21 @@ resource "azurerm_network_interface_security_group_association" "nsg_nic" {
   ]
 }
 
-# Linux VM
+# ------------------------
+# Linux Virtual Machine
+# ------------------------
 resource "azurerm_linux_virtual_machine" "vm" {
   name                  = "arjunlinux1"
   resource_group_name   = azurerm_resource_group.rg.name
   location              = azurerm_resource_group.rg.location
-  size                  = "Standard_B1ms"   # Changed to available size
+  size                  = "Standard_B1ms"
   network_interface_ids = [azurerm_network_interface.nic.id]
   admin_username        = "adminuser"
   disable_password_authentication = true
 
   admin_ssh_key {
     username   = "adminuser"
-    public_key = file("~/.ssh/id_rsa.pub")
+    public_key = var.ssh_public_key
   }
 
   os_disk {
