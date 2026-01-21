@@ -1,6 +1,6 @@
 variable "location" {
   type    = string
-  default = "central India"
+  default = "south India"
 }
 
 variable "rg_name" {
